@@ -31,18 +31,12 @@ that instead; otherwise `localStorage`.)
 ## Deploying
 
 The site is the repository root — `index.html` plus nothing else it needs.
-`.github/workflows/pages.yml` publishes it to GitHub Pages.
+`.github/workflows/pages.yml` publishes it to GitHub Pages on every push to the
+default branch, and can also be run by hand from the Actions tab.
 
-That workflow is **manual trigger only** (Actions -> Deploy to GitHub Pages ->
-Run workflow), because Pages has to be enabled by hand first and the workflow
-fails on every push until it is:
-
-1. **Settings -> Pages -> Build and deployment -> Source: GitHub Actions.**
-   While this repository is private, that option needs GitHub Enterprise Cloud;
-   otherwise make the repository public first.
-2. Run the workflow once. The site URL appears in the run summary.
-3. Optionally add a `push:` trigger to the workflow so later commits deploy
-   automatically.
+`configure-pages` runs with `enablement: true`, so the workflow turns Pages on
+itself; there is nothing to switch on in repo settings. The live URL appears in
+each run summary and under Settings -> Pages.
 
 Nothing here is Pages-specific, so any static host works too: serve the
 repository root, or just open `index.html` from disk.

@@ -1,13 +1,15 @@
 # Publishes the repository root (a single static index.html) to GitHub Pages.
 #
-# Manual trigger only. Pages must be enabled first — Settings -> Pages ->
-# Source: "GitHub Actions" — which for a private repo needs GitHub Enterprise
-# Cloud, or the repo made public. Until then this workflow would fail on every
-# push, so it does not run on push by design. Add a `push:` trigger once Pages
-# is on and the first manual run is green.
+# configure-pages runs with enablement: true, so the first successful run turns
+# Pages on by itself — no manual step in repo settings.
 name: Deploy to GitHub Pages
 
 on:
+  push:
+    branches:
+      - main
+      - master
+      - claude/code-prompts-page-4gb2vv
   workflow_dispatch:
 
 permissions:
@@ -28,6 +30,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
