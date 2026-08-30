@@ -257,6 +257,29 @@ function seed() {
     "List the 5 decisions that will be hardest to reverse later (data model, auth, hosting, framework, multi-tenancy). For each, give me a default and when I'd regret it. Don't decide for me.",
     "Grill me on this plan. Find the assumptions I haven't validated."
   ]);
+  add('fresh', 'Spec intake', [
+    ["Read [the spec docs] end to end before doing anything. Build an index of every decision: what it is, where it lives, its date, and whether a later section amends or supersedes it. A dated amendment wins over the text it amends.", 'PM docs bury reversals mid-document'],
+    "Sort everything in the spec into four lists: settled (build against it), deliberately left open (someone's call to make), missing but non-blocking (placeholder for now), and explicitly deferred (anticipate, don't build). Quote the doc for each item — don't infer the category.",
+    "The spec links out to databases/boards. Treat those as the source of truth for scope: one row = one deliverable. Pull the full list and tell me which properties encode priority, status, and ownership.",
+    "Find every precedence rule in these docs — which document wins, what is history that must never be built from, what is the single source for each kind of content. Write it as a short hierarchy for CLAUDE.md.",
+    "What would a senior engineer ask before starting? Only questions the docs genuinely don't answer — cite where you looked for each."
+  ]);
+  add('fresh', 'Spec → tickets', [
+    ["Extract every buildable item from [the spec] into tickets: title, what done means, the section it comes from, and the priority exactly as the doc states it (phases, launch/later, must/should). Where the doc gives no priority, mark it unstated — don't assign one.", 'Their priority, not yours'],
+    "For each ticket, quote the spec sentence it comes from. Anything without a quote gets flagged as inferred, and I'll confirm those with the PM before they enter the backlog.",
+    "Group the tickets into milestones using only the doc's own sequencing — phases, before/after launch, dependencies it names. Then, separately, list the technical dependencies the doc missed.",
+    "Find every requirement stated in words that a developer needs as a number or rule: length caps, counts, ranges, formats, required states. Attach each to its ticket as an acceptance criterion.",
+    "Which tickets contradict each other, or a later amendment in the doc? Show both quotes side by side. Don't resolve the conflicts — I'm taking them back to the PM.",
+    "Write the questions-for-the-PM list: everything ambiguous, conflicting, or unstated. One line each, grouped by how hard it blocks, so they can answer from their phone."
+  ]);
+  add('fresh', 'Design handover', [
+    ["Extract everything a designer needs from [the spec] into one brief: what is settled and must be designed against, what is deliberately the designer's call, what is missing and how to placeholder it, and what arrives later that the layout must absorb without a redesign. Quote the doc; add nothing.", 'Claude Design'],
+    ["Pull every constraint that shapes the design system even though it isn't visual: voice rules, content registers and densities, text length limits, counts of things (nav items, testimonials, logos), and named future additions. This is the input to the design-system interview.", 'Claude Design'],
+    ["Design with the real copy from the spec. Never placeholder a headline or any element with a stated length limit — the design has to fit the text that will actually ship. Lorem only where the spec says the content doesn't exist yet.", 'Claude Design'],
+    ["The spec names distinct registers ([register A] vs [register B]). Design both on one type system and one grid, so a visitor feels the shift when crossing between them. Show me the same components rendered in each, side by side.", 'Claude Design'],
+    ["List every form and interactive surface in the spec, then design the full state set for each: empty, validation, error, in-progress, success. Start with the most involved one.", 'Claude Design'],
+    ["Design for the populated site the spec describes, not for launch-day content: assume the lists are long and the walls are full. Flag any layout that only works thin or only works full.", 'Claude Design']
+  ]);
   add('fresh', 'Brand & design', [
     ["I have no brand yet. Ask me about the product's personality using contrasts (calm vs energetic, playful vs serious, dense vs airy, premium vs approachable). One question at a time. Then propose 3 distinct directions with a name and rationale each.", 'Claude Design'],
     ["Take direction [X]. Give me: color palette with roles (primary, surface, text, danger), type pairing, spacing scale, border radius, and 3 adjectives the UI should never feel like.", 'Claude Design'],
@@ -296,7 +319,9 @@ function seed() {
     "Don't build for scale we don't have yet.",
     "Match the brand sheet; don't invent styles.",
     "One decision at a time; wait for my answer.",
-    "Working before pretty; pretty before more features."
+    "Working before pretty; pretty before more features.",
+    "The spec's priority order wins; don't reorder work without telling me.",
+    "Every ticket cites its source line in the spec, or it's marked inferred."
   ]);
   return { v: 1, libs, cats, prompts };
 }
