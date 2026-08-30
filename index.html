@@ -1,0 +1,578 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prompts for Claude Code</title>
+<meta name="description" content="A searchable, editable library of prompts for working with Claude Code — on an existing codebase or a fresh project.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext y='19' font-size='20' font-family='monospace' fill='%233557E6'%3E%3E%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F5F7; --surface:#FFFFFF; --ink:#16181D; --ink-2:#646B79; --ink-3:#9AA0AC;
+    --line:#E4E6EB; --line-2:#D3D6DD; --accent:#3557E6; --accent-ink:#2743B8; --accent-soft:#EBEFFD;
+    --danger:#C93B3B; --shadow:0 1px 2px rgba(20,22,30,.06),0 8px 24px -12px rgba(20,22,30,.16);
+    --sans:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --r:10px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#111317; --surface:#181B21; --ink:#ECEDF0; --ink-2:#9AA0AC; --ink-3:#6B717D;
+      --line:#262A33; --line-2:#333844; --accent:#7A90FF; --accent-ink:#A5B4FF; --accent-soft:#1E2540;
+      --danger:#F07575; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+  button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+  button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  input,textarea,select{font:inherit;color:inherit}
+  ::selection{background:var(--accent-soft)}
+
+  .app{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+
+  /* ---------- sidebar ---------- */
+  .side{border-right:1px solid var(--line);padding:22px 14px 16px;display:flex;flex-direction:column;gap:18px;position:sticky;top:0;height:100vh;overflow:auto}
+  .brand{padding:0 8px}
+  .brand h1{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .brand p{margin:2px 0 0;color:var(--ink-3);font-size:12px}
+  .libs{display:flex;gap:4px;background:var(--line);padding:3px;border-radius:9px}
+  .libs button{flex:1;padding:6px 8px;border-radius:7px;font-size:12.5px;font-weight:500;color:var(--ink-2)}
+  .libs button[aria-pressed=true]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .cats{display:flex;flex-direction:column;gap:2px}
+  .cats .lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:6px 8px 4px}
+  .cat{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;text-align:left;width:100%;color:var(--ink-2)}
+  .cat:hover{background:var(--line)}
+  .cat[aria-current=true]{background:var(--accent-soft);color:var(--accent-ink);font-weight:500}
+  .cat .n{margin-left:auto;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .cat .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cat .more{display:none;color:var(--ink-3);padding:0 2px;line-height:1}
+  .cat:hover .more,.cat:focus-within .more{display:inline}
+  .cat .more:hover{color:var(--ink)}
+  .cat-add{color:var(--ink-3);padding:6px 8px;border-radius:7px;text-align:left}
+  .cat-add:hover{color:var(--ink);background:var(--line)}
+  .cat-add-form{display:flex;gap:6px;padding:4px 4px}
+  .cat-add-form input{flex:1;min-width:0;padding:5px 8px;border:1px solid var(--line-2);border-radius:7px;background:var(--surface)}
+  .side-foot{margin-top:auto;display:flex;gap:2px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--line)}
+  .side-foot button{font-size:12px;color:var(--ink-3);padding:4px 8px;border-radius:6px}
+  .side-foot button:hover{color:var(--ink);background:var(--line)}
+
+  /* ---------- main ---------- */
+  main{min-width:0;padding:22px 32px 80px;max-width:880px}
+  .top{display:flex;gap:10px;align-items:center;margin-bottom:18px;position:sticky;top:0;background:var(--bg);padding:6px 0 12px;z-index:2}
+  .search{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:0 10px 0 12px;height:38px}
+  .search:focus-within{border-color:var(--accent)}
+  .search svg{flex:none;color:var(--ink-3)}
+  .search input{flex:1;min-width:0;border:0;background:none;height:100%;font-size:14px}
+  .search input::placeholder{color:var(--ink-3)}
+  .search kbd{font:11px var(--mono);color:var(--ink-3);border:1px solid var(--line-2);border-radius:4px;padding:1px 5px}
+  .search .clr{display:none;color:var(--ink-3);padding:4px}
+  .search.has .clr{display:block}.search.has kbd{display:none}
+  .btn{height:38px;padding:0 14px;border-radius:var(--r);font-weight:500;font-size:13.5px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .btn-primary{background:var(--ink);color:var(--bg)}
+  .btn-primary:hover{opacity:.9}
+  .btn-ghost{color:var(--ink-2);padding:0 10px}
+  .btn-ghost:hover{background:var(--line);color:var(--ink)}
+  .btn-danger{color:var(--danger)}
+  .btn-danger:hover{background:color-mix(in srgb,var(--danger) 10%,transparent)}
+  .btn-sm{height:32px;font-size:13px}
+
+  .section-h{display:flex;align-items:baseline;gap:10px;margin:22px 0 8px}
+  .section-h:first-child{margin-top:0}
+  .section-h h2{margin:0;font-size:13px;font-weight:600}
+  .section-h span{font-size:12px;color:var(--ink-3)}
+
+  .list{display:flex;flex-direction:column;gap:6px}
+
+  /* prompt card — the signature: a terminal line you click to copy */
+  .prompt{position:relative;display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 12px 12px 14px;transition:border-color .12s,box-shadow .12s}
+  .prompt:hover{border-color:var(--line-2);box-shadow:var(--shadow)}
+  .prompt .glyph{font:500 14px/1.55 var(--mono);color:var(--accent);user-select:none;padding-top:1px}
+  .prompt .body{min-width:0;cursor:copy}
+  .prompt .text{margin:0;font:13.5px/1.55 var(--mono);white-space:pre-wrap;word-break:break-word}
+  .prompt .note{margin:6px 0 0;font-size:12.5px;color:var(--ink-2)}
+  .prompt .tag{display:inline-block;margin-top:8px;font-size:11px;color:var(--ink-3);letter-spacing:.02em}
+  .prompt .acts{display:flex;gap:2px;opacity:0;transition:opacity .12s}
+  .prompt:hover .acts,.prompt:focus-within .acts,.prompt.pinned .acts{opacity:1}
+  .prompt.pinned .acts .ic:not(.pin){opacity:0}
+  .prompt:hover .acts .ic,.prompt:focus-within .acts .ic{opacity:1}
+  .ic{width:28px;height:28px;border-radius:6px;display:inline-grid;place-items:center;color:var(--ink-3)}
+  .ic:hover{background:var(--line);color:var(--ink)}
+  .ic.pin.on{color:var(--accent)}
+  .prompt.copied{border-color:var(--accent)}
+
+  /* inline editor */
+  .editor{background:var(--surface);border:1px solid var(--accent);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
+  .editor textarea{width:100%;min-height:92px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--bg);font:13.5px/1.55 var(--mono)}
+  .editor textarea:focus{border-color:var(--accent);outline:0}
+  .editor .row{display:flex;gap:8px;flex-wrap:wrap}
+  .editor input,.editor select{height:34px;border:1px solid var(--line);border-radius:8px;padding:0 10px;background:var(--bg);font-size:13px}
+  .editor input{flex:1;min-width:180px}
+  .editor .foot{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:2px}
+  .editor .foot .spacer{flex:1}
+  .editor .hint{font-size:12px;color:var(--ink-3)}
+
+  .empty{padding:48px 20px;text-align:center;color:var(--ink-2)}
+  .empty b{display:block;color:var(--ink);font-weight:500;margin-bottom:4px}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,12px);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .15s,transform .15s;z-index:9}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+  @media (max-width:760px){
+    .app{grid-template-columns:1fr}
+    .side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:16px 14px 10px;gap:12px}
+    .cats{flex-direction:row;flex-wrap:wrap;gap:4px}
+    .cats .lbl{display:none}
+    .cat{width:auto;padding:5px 10px;border:1px solid var(--line);border-radius:999px;font-size:12.5px}
+    .cat .n{display:none}
+    .cat .more{display:none!important}
+    .cat-add{padding:5px 10px}
+    .cat-add-form{width:100%}
+    .side-foot{display:none}
+    main{padding:14px 14px 80px}
+    .prompt .acts{opacity:1}
+    .prompt.pinned .acts .ic:not(.pin){opacity:1}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <h1>Prompts</h1>
+      <p>for Claude Code</p>
+    </div>
+    <div class="libs" id="libs" role="tablist" aria-label="Library"></div>
+    <nav class="cats" id="cats" aria-label="Categories"></nav>
+    <div class="side-foot">
+      <button id="export">Export</button>
+      <button id="import">Import</button>
+      <button id="reset">Reset to defaults</button>
+      <input type="file" id="file" accept="application/json" class="sr" tabindex="-1">
+    </div>
+  </aside>
+
+  <main>
+    <div class="top">
+      <label class="search" id="searchbox">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Search prompts" autocomplete="off" aria-label="Search prompts">
+        <kbd>/</kbd>
+        <button class="clr" id="clr" aria-label="Clear search">✕</button>
+      </label>
+      <button class="btn btn-primary" id="new">＋ New prompt</button>
+    </div>
+    <div id="list" class="list"></div>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+const KEY = 'promptlib:v1';
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+/* ---------------- defaults ---------------- */
+function seed() {
+  const libs = [{ id: 'existing', name: 'Existing codebase' }, { id: 'fresh', name: 'Fresh project' }];
+  const cats = [], prompts = [];
+  const add = (lib, name, items) => {
+    const c = { id: uid(), lib, name };
+    cats.push(c);
+    items.forEach(it => {
+      const [text, note] = Array.isArray(it) ? it : [it, ''];
+      prompts.push({ id: uid(), lib, cat: c.id, text, note, pinned: false, created: Date.now() });
+    });
+  };
+
+  add('existing', 'Orientation', [
+    ["Give me a map of this codebase: entry points, the main data flow, where config lives, and how tests run. Don't change anything. Save the summary to CLAUDE.md.", 'First hour in a repo'],
+    "Explain how @src/auth/ works end to end. Trace one request from route to database. Cite file paths and line numbers.",
+    "List the conventions this repo follows (naming, error handling, logging, folder structure) with one example of each. I'll use this to write CLAUDE.md.",
+    "Which parts of this codebase look fragile or under-tested? Rank by risk, and explain why for each. Don't fix anything yet."
+  ]);
+  add('existing', 'Bug fixing', [
+    "Reproduce issue #983 first. Write a failing test that demonstrates it, then stop and show me.",
+    ["Figure out the root cause of [error]. Propose 2–3 fixes with trade-offs. Let me choose before you code. think hard", 'Root cause before code'],
+    "This bug only happens in production. Look at @logs/ and the diff since the last release, and tell me the most likely cause before proposing a fix.",
+    "Fix the bug, but don't touch anything outside the failing code path. If you think a wider change is needed, tell me why instead of doing it."
+  ]);
+  add('existing', 'Feature work', [
+    ["Read the relevant code for [feature]. Don't write code yet. Give me a plan with the files you'll touch and any decisions I need to make.", 'Explore › plan › confirm › code'],
+    "Implement the plan step 1 only. Run the tests. Stop and show me the diff before continuing.",
+    "Implement [feature] following the patterns already in @src/services/. Match existing style exactly, including error handling and logging.",
+    "Before implementing, list every place in the codebase that will need to change if I add [field/endpoint/model]. Include migrations, types, tests, and docs."
+  ]);
+  add('existing', 'Refactoring', [
+    "Refactor @path/file for readability. Behavior must not change. Run the full test suite before and after and show me both results.",
+    "This function is 300 lines. Propose how to split it. Don't refactor until I approve the boundaries.",
+    "Find duplicated logic across @src/ and propose one abstraction. Show me the 3 worst duplicates first.",
+    "Use 3 parallel agents to independently propose a cleanup of @module/. Then compare their proposals and recommend one."
+  ]);
+  add('existing', 'Testing', [
+    "Identify edge cases not covered in @app/tests/signupTest.ts, then add tests for them. think hard",
+    ["Write tests for @utils/markdown.ts (they won't pass yet, feature isn't implemented). Commit. Then implement until they pass. Don't modify the tests to make them pass.", 'TDD loop'],
+    "Increase coverage of @src/payments/ to the meaningful branches only. Don't write tests that just assert the code does what it does.",
+    "Write a test that would have caught the bug in commit [hash]."
+  ]);
+  add('existing', 'Review', [
+    "Review this diff like a senior engineer who will be on-call for it. Flag correctness, security, and edge cases. Skip style nits.",
+    "Review PR #412. For each comment, label it blocking / suggestion / nit.",
+    "Look at my uncommitted changes. Is there anything I forgot: migrations, env vars, docs, types, error cases?",
+    "Audit @src/api/ for security issues: injection, auth bypass, unvalidated input, secrets in code. Report only, don't fix."
+  ]);
+  add('existing', 'Git & shipping', [
+    "commit, push, pr",
+    "Split my staged changes into logical commits with clear messages.",
+    "Write the PR description: what changed, why, how to test, and risks. Keep it short.",
+    "Resolve the merge conflicts in [branch]. Explain each decision you made."
+  ]);
+  add('existing', 'Performance & debugging', [
+    "Profile [operation] and find the top 3 bottlenecks. Show me the data before proposing changes.",
+    "Add logging around [flow] so I can debug it, then remove it after we find the issue.",
+    "Use the [tool] CLI to check the error logs from the last run. Use -h to learn how it works."
+  ]);
+  add('existing', 'Context hygiene', [
+    "Update CLAUDE.md with what you learned in this session: commands, gotchas, conventions.",
+    ["# [note]", 'Quick-add a fact to CLAUDE.md mid-session'],
+    ["/clear", 'Between unrelated tasks so old context doesn’t pollute new work'],
+    "Summarize what we've done and what's left, then I'll /clear and paste that in."
+  ]);
+  add('existing', 'Guardrails', [
+    "Don't write code yet.",
+    "Show me the diff before continuing.",
+    "Only touch files under @path/.",
+    "If you're unsure, ask instead of guessing.",
+    "Run the tests and show output.",
+    "Match existing patterns; don't introduce new dependencies.",
+    ["ultrathink", 'Append for anything architectural or subtle']
+  ]);
+
+  add('fresh', 'Discovery', [
+    ["I want to build [one-sentence idea]. Before anything else, interview me: ask one question at a time about users, core job-to-be-done, constraints, and what “done” means for v1. Stop when you could write a one-page brief.", 'Before any tool touches a file'],
+    "Write that brief to BRIEF.md: problem, target user, v1 scope, explicit non-goals, success metric.",
+    "List the 5 decisions that will be hardest to reverse later (data model, auth, hosting, framework, multi-tenancy). For each, give me a default and when I'd regret it. Don't decide for me.",
+    "Grill me on this plan. Find the assumptions I haven't validated."
+  ]);
+  add('fresh', 'Brand & design', [
+    ["I have no brand yet. Ask me about the product's personality using contrasts (calm vs energetic, playful vs serious, dense vs airy, premium vs approachable). One question at a time. Then propose 3 distinct directions with a name and rationale each.", 'Claude Design'],
+    ["Take direction [X]. Give me: color palette with roles (primary, surface, text, danger), type pairing, spacing scale, border radius, and 3 adjectives the UI should never feel like.", 'Claude Design'],
+    ["Generate a one-page brand sheet I can hand to a developer: tokens, do/don't examples, and one sample component in that style.", 'Claude Design'],
+    ["Show me the same login screen in all 3 directions so I can compare them side by side.", 'Claude Design'],
+    ["Design the 3 core screens of v1 as a clickable prototype. Prioritize the main flow; skip settings, empty states, and edge cases for now.", 'Claude Design'],
+    ["Now design the empty states, loading states, and error states for those screens. Keep the tone consistent with the brand sheet.", 'Claude Design'],
+    ["Export the design tokens as CSS variables / a Tailwind config I can drop into the codebase.", 'Claude Design']
+  ]);
+  add('fresh', 'Architecture', [
+    "Given BRIEF.md, propose a stack for a solo developer who wants to ship fast but not rewrite in 6 months. Give me 2 options with trade-offs. ultrathink",
+    "Design the data model. Show it as a diagram plus a schema. Flag anything that will be hard to change later.",
+    "Sketch the folder structure and explain the responsibility of each top-level folder in one line. Don't create it yet.",
+    "Write CLAUDE.md for this project: stack, commands, conventions we're adopting, and rules like “no new dependencies without asking.”"
+  ]);
+  add('fresh', 'Scaffolding', [
+    "Scaffold the project with the stack we agreed on. Minimal: it should run, have one test, lint, and format. Nothing else. Commit.",
+    "Set up the dev loop: one command to run, one to test, one to lint. Document them in CLAUDE.md and README.",
+    "Add the design tokens from @design/tokens.css and build the 5 base components (button, input, card, layout, nav). No feature code yet.",
+    "Set up CI that runs tests and lint on every push. Keep it under 20 lines of config."
+  ]);
+  add('fresh', 'First feature', [
+    ["Build the smallest end-to-end slice: one screen, one API call, one row in the database. Ugly is fine. Working matters.", 'Thin vertical slice'],
+    "Implement [screen] from @design/mock.png. Then screenshot it with Puppeteer and iterate until it matches the mock.",
+    "Now make the slice good: validation, error states, loading states, using the components we built. Don't add new features.",
+    "Write tests for the slice before we move on. Cover the happy path and the 2 most likely failures."
+  ]);
+  add('fresh', 'Growing', [
+    "Before adding [feature], check whether it fits the current structure or whether we need to refactor first. Tell me which, and why.",
+    "Every time you add a pattern that future code should follow, add it to CLAUDE.md.",
+    "Review the codebase as if you're joining the team next week. What's confusing, undocumented, or inconsistent?",
+    "We're at v1. List what's hardcoded, faked, or skipped that has to be real before launch."
+  ]);
+  add('fresh', 'Guardrails', [
+    "Minimal. Don't add anything I didn't ask for.",
+    "No new dependencies without asking.",
+    "Don't build for scale we don't have yet.",
+    "Match the brand sheet; don't invent styles.",
+    "One decision at a time; wait for my answer.",
+    "Working before pretty; pretty before more features."
+  ]);
+  return { v: 1, libs, cats, prompts };
+}
+
+/* ---------------- state + storage ---------------- */
+let S = null;
+const ui = { lib: 'existing', cat: 'all', q: '', editing: null, adding: false, addingCat: false };
+
+/* The Artifact host injects window.storage; a plain static deploy
+   (GitHub Pages, file://) falls back to localStorage. */
+const store = {
+  async get() {
+    if (window.storage && window.storage.get) return (await window.storage.get(KEY, false)).value;
+    return localStorage.getItem(KEY);
+  },
+  async set(value) {
+    if (window.storage && window.storage.set) return window.storage.set(KEY, value, false);
+    localStorage.setItem(KEY, value);
+  }
+};
+
+let saveT;
+function save() {
+  clearTimeout(saveT);
+  saveT = setTimeout(async () => {
+    try { await store.set(JSON.stringify(S)); }
+    catch (e) { toast('Could not save'); console.error(e); }
+  }, 250);
+}
+async function load() {
+  try {
+    const d = JSON.parse(await store.get());
+    if (d && Array.isArray(d.prompts) && Array.isArray(d.cats)) return d;
+  } catch (e) { /* first run, or storage unavailable */ }
+  const d = seed();
+  S = d; save();
+  return d;
+}
+
+/* ---------------- helpers ---------------- */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let toastT;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1400);
+}
+async function copy(text, el) {
+  try { await navigator.clipboard.writeText(text); }
+  catch { const ta = document.createElement('textarea'); ta.value = text; document.body.append(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  toast('Copied');
+  if (el) { el.classList.add('copied'); setTimeout(() => el.classList.remove('copied'), 500); }
+}
+const catsOf = lib => S.cats.filter(c => c.lib === lib);
+const catName = id => (S.cats.find(c => c.id === id) || {}).name || '';
+
+function visible() {
+  const q = ui.q.trim().toLowerCase();
+  return S.prompts.filter(p => {
+    if (!q && p.lib !== ui.lib) return false;      // search spans both libraries
+    if (!q && ui.cat === 'pinned' && !p.pinned) return false;
+    if (!q && ui.cat !== 'all' && ui.cat !== 'pinned' && p.cat !== ui.cat) return false;
+    if (q && !(p.text + ' ' + p.note + ' ' + catName(p.cat)).toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+/* ---------------- render ---------------- */
+function render() { renderSide(); renderList(); }
+
+function renderSide() {
+  $('#libs').innerHTML = S.libs.map(l =>
+    `<button role="tab" data-lib="${l.id}" aria-pressed="${l.id === ui.lib}">${esc(l.name)}</button>`).join('');
+
+  const cs = catsOf(ui.lib);
+  const count = f => S.prompts.filter(p => p.lib === ui.lib && f(p)).length;
+  const row = (id, name, n, editable) =>
+    `<div class="cat" role="button" tabindex="0" data-cat="${id}" aria-current="${ui.cat === id}">
+       <span class="name">${esc(name)}</span>
+       ${editable ? `<button class="more" data-catmenu="${id}" aria-label="Rename or delete ${esc(name)}">⋯</button>` : ''}
+       <span class="n">${n}</span>
+     </div>`;
+  let html = `<div class="lbl">Browse</div>` +
+    row('all', 'All prompts', count(() => true)) +
+    row('pinned', 'Pinned', count(p => p.pinned)) +
+    `<div class="lbl">Categories</div>` +
+    cs.map(c => row(c.id, c.name, count(p => p.cat === c.id), true)).join('');
+  html += ui.addingCat
+    ? `<form class="cat-add-form" id="catform"><input id="catname" placeholder="Category name" maxlength="40" aria-label="New category name"><button class="btn btn-sm btn-primary">Add</button></form>`
+    : `<button class="cat-add" id="addcat">＋ Add category</button>`;
+  $('#cats').innerHTML = html;
+  if (ui.addingCat) $('#catname').focus();
+}
+
+function editorHTML(p, isNew) {
+  const cs = catsOf(p.lib);
+  return `<form class="editor" data-editor="${p.id}">
+    <textarea name="text" placeholder="The prompt, exactly as you'd type it. Use [brackets] for the parts you fill in." aria-label="Prompt text">${esc(p.text)}</textarea>
+    <div class="row">
+      <select name="cat" aria-label="Category">${cs.map(c => `<option value="${c.id}" ${c.id === p.cat ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
+      <input name="note" placeholder="Optional note: when to use it" value="${esc(p.note)}" maxlength="120" aria-label="Note">
+    </div>
+    <div class="foot">
+      ${isNew ? '' : `<button type="button" class="btn btn-sm btn-ghost btn-danger" data-del="${p.id}">Delete</button>`}
+      <span class="spacer"></span>
+      <span class="hint">⌘/Ctrl + Enter to save</span>
+      <button type="button" class="btn btn-sm btn-ghost" data-cancel>Cancel</button>
+      <button class="btn btn-sm btn-primary">${isNew ? 'Add prompt' : 'Save'}</button>
+    </div>
+  </form>`;
+}
+
+function cardHTML(p) {
+  const showCat = ui.q.trim() || ui.cat === 'all' || ui.cat === 'pinned';
+  const libName = (S.libs.find(l => l.id === p.lib) || {}).name || '';
+  return `<article class="prompt ${p.pinned ? 'pinned' : ''}" data-id="${p.id}">
+    <span class="glyph" aria-hidden="true">&gt;</span>
+    <div class="body" role="button" tabindex="0" data-copy="${p.id}" title="Click to copy">
+      <pre class="text">${esc(p.text)}</pre>
+      ${p.note ? `<p class="note">${esc(p.note)}</p>` : ''}
+      ${showCat ? `<span class="tag">${esc(catName(p.cat))}${ui.q.trim() ? ' · ' + esc(libName) : ''}</span>` : ''}
+    </div>
+    <div class="acts">
+      <button class="ic pin ${p.pinned ? 'on' : ''}" data-pin="${p.id}" aria-label="${p.pinned ? 'Unpin' : 'Pin'}" aria-pressed="${p.pinned}">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="${p.pinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg>
+      </button>
+      <button class="ic" data-edit="${p.id}" aria-label="Edit">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+      </button>
+      <button class="ic" data-copy="${p.id}" aria-label="Copy">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
+    </div>
+  </article>`;
+}
+
+function renderList() {
+  const list = $('#list');
+  const items = visible();
+  const q = ui.q.trim();
+  let html = '';
+
+  if (ui.adding) {
+    const cs = catsOf(ui.lib);
+    const cat = (ui.cat !== 'all' && ui.cat !== 'pinned') ? ui.cat : (cs[0] || {}).id;
+    html += editorHTML({ id: 'new', lib: ui.lib, cat, text: '', note: '' }, true);
+  }
+
+  const render1 = p => ui.editing === p.id ? editorHTML(p, false) : cardHTML(p);
+
+  if (!items.length && !ui.adding) {
+    if (q) html += `<div class="empty"><b>No prompts match “${esc(q)}”</b>Try fewer words, or add it as a new prompt.</div>`;
+    else if (ui.cat === 'pinned') html += `<div class="empty"><b>Nothing pinned yet</b>Hover a prompt and click the star to keep it here.</div>`;
+    else html += `<div class="empty"><b>No prompts here yet</b>Press <kbd>n</kbd> or “New prompt” to add one.</div>`;
+  } else if (q || ui.cat !== 'all') {
+    // pinned first, then original order
+    html += [...items].sort((a, b) => (b.pinned - a.pinned)).map(render1).join('');
+  } else {
+    // "All": grouped by category, pinned block on top
+    const pinned = items.filter(p => p.pinned);
+    if (pinned.length) html += `<div class="section-h"><h2>Pinned</h2><span>${pinned.length}</span></div>` + pinned.map(render1).join('');
+    catsOf(ui.lib).forEach(c => {
+      const ps = items.filter(p => p.cat === c.id && !p.pinned);
+      if (!ps.length) return;
+      html += `<div class="section-h"><h2>${esc(c.name)}</h2><span>${ps.length}</span></div>` + ps.map(render1).join('');
+    });
+  }
+  list.innerHTML = html;
+  const ed = $('[data-editor] textarea', list);
+  if (ed) { ed.focus(); ed.setSelectionRange(ed.value.length, ed.value.length); if (ui.adding) ed.scrollIntoView({ block: 'nearest' }); }
+}
+
+/* ---------------- events ---------------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button,[role=button]');
+  if (!t) return;
+
+  if (t.dataset.lib) { ui.lib = t.dataset.lib; ui.cat = 'all'; ui.editing = null; ui.adding = false; render(); return; }
+  if (t.dataset.catmenu) { e.stopPropagation(); catMenu(t.dataset.catmenu); return; }
+  if (t.dataset.cat) { ui.cat = t.dataset.cat; ui.editing = null; ui.adding = false; setQ(''); render(); return; }
+  if (t.id === 'addcat') { ui.addingCat = true; renderSide(); return; }
+  if (t.id === 'new') { startAdd(); return; }
+  if (t.id === 'clr') { setQ(''); render(); $('#q').focus(); return; }
+  if (t.id === 'export') { exportJSON(); return; }
+  if (t.id === 'import') { $('#file').click(); return; }
+  if (t.id === 'reset') { if (confirm('Replace everything with the default prompt set? Your edits will be lost. Export first if you want a backup.')) { S = seed(); ui.cat = 'all'; ui.editing = null; ui.adding = false; save(); render(); toast('Defaults restored'); } return; }
+
+  if (t.dataset.copy) { const p = S.prompts.find(p => p.id === t.dataset.copy); if (p) copy(p.text, t.closest('.prompt')); return; }
+  if (t.dataset.pin) { const p = S.prompts.find(p => p.id === t.dataset.pin); p.pinned = !p.pinned; save(); render(); return; }
+  if (t.dataset.edit) { ui.editing = t.dataset.edit; ui.adding = false; renderList(); return; }
+  if (t.hasAttribute('data-cancel')) { ui.editing = null; ui.adding = false; renderList(); return; }
+  if (t.dataset.del) {
+    if (!confirm('Delete this prompt?')) return;
+    S.prompts = S.prompts.filter(p => p.id !== t.dataset.del); ui.editing = null; save(); render(); toast('Deleted'); return;
+  }
+});
+
+document.addEventListener('keydown', e => {
+  const inField = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+  if (e.key === '/' && !inField) { e.preventDefault(); $('#q').focus(); return; }
+  if (e.key === 'n' && !inField && !e.metaKey && !e.ctrlKey) { e.preventDefault(); startAdd(); return; }
+  if (e.key === 'Escape') {
+    if (ui.editing || ui.adding) { ui.editing = null; ui.adding = false; renderList(); }
+    else if (ui.addingCat) { ui.addingCat = false; renderSide(); }
+    else if (document.activeElement === $('#q')) { setQ(''); render(); $('#q').blur(); }
+    return;
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    const f = document.activeElement.closest('form[data-editor]');
+    if (f) { e.preventDefault(); f.requestSubmit(); }
+    return;
+  }
+  // Enter/Space on role=button elements
+  if ((e.key === 'Enter' || e.key === ' ') && document.activeElement.getAttribute('role') === 'button') {
+    e.preventDefault(); document.activeElement.click();
+  }
+});
+
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  const f = e.target;
+  if (f.id === 'catform') {
+    const name = $('#catname').value.trim();
+    if (!name) return;
+    const c = { id: uid(), lib: ui.lib, name };
+    S.cats.push(c); ui.addingCat = false; ui.cat = c.id; save(); render(); return;
+  }
+  if (f.dataset.editor) {
+    const text = f.text.value.trim();
+    if (!text) { f.text.focus(); return; }
+    const cat = f.cat.value, note = f.note.value.trim();
+    if (f.dataset.editor === 'new') {
+      S.prompts.push({ id: uid(), lib: ui.lib, cat, text, note, pinned: false, created: Date.now() });
+      ui.adding = false; toast('Added');
+    } else {
+      const p = S.prompts.find(p => p.id === f.dataset.editor);
+      Object.assign(p, { text, cat, note }); ui.editing = null; toast('Saved');
+    }
+    save(); render();
+  }
+});
+
+$('#q').addEventListener('input', e => { setQ(e.target.value); renderList(); });
+function setQ(v) { ui.q = v; $('#q').value = v; $('#searchbox').classList.toggle('has', !!v); }
+
+function startAdd() { ui.adding = true; ui.editing = null; window.scrollTo({ top: 0 }); renderList(); }
+
+function catMenu(id) {
+  const c = S.cats.find(c => c.id === id);
+  const n = S.prompts.filter(p => p.cat === id).length;
+  const name = prompt(`Rename category (leave empty to delete${n ? ` — it holds ${n} prompt${n > 1 ? 's' : ''}, which will be deleted too` : ''}):`, c.name);
+  if (name === null) return;
+  if (name.trim() === '') {
+    if (!confirm(`Delete “${c.name}”${n ? ` and its ${n} prompt${n > 1 ? 's' : ''}` : ''}?`)) return;
+    S.cats = S.cats.filter(x => x.id !== id); S.prompts = S.prompts.filter(p => p.cat !== id);
+    if (ui.cat === id) ui.cat = 'all'; toast('Category deleted');
+  } else { c.name = name.trim(); }
+  save(); render();
+}
+
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'claude-code-prompts.json' });
+  a.click(); URL.revokeObjectURL(a.href); toast('Exported');
+}
+$('#file').addEventListener('change', async e => {
+  const file = e.target.files[0]; e.target.value = '';
+  if (!file) return;
+  try {
+    const d = JSON.parse(await file.text());
+    if (!d || !Array.isArray(d.prompts) || !Array.isArray(d.cats) || !Array.isArray(d.libs)) throw 0;
+    S = d; ui.cat = 'all'; ui.editing = null; ui.adding = false; save(); render(); toast('Imported');
+  } catch { toast('That file isn’t a prompt export'); }
+});
+
+/* ---------------- boot ---------------- */
+load().then(d => { S = d; render(); });
+})();
+</script>
