@@ -34,9 +34,13 @@ The site is the repository root — `index.html` plus nothing else it needs.
 `.github/workflows/pages.yml` publishes it to GitHub Pages on every push to the
 default branch, and can also be run by hand from the Actions tab.
 
-`configure-pages` runs with `enablement: true`, so the workflow turns Pages on
-itself; there is nothing to switch on in repo settings. The live URL appears in
-each run summary and under Settings -> Pages.
+Pages has to be enabled once, by a repo admin:
+**Settings -> Pages -> Build and deployment -> Source: GitHub Actions.**
+The workflow cannot do this for itself — creating a Pages site is an admin-only
+API call and the built-in `GITHUB_TOKEN` is not an admin, so
+`configure-pages` with `enablement: true` fails with "Resource not accessible
+by integration". After that one click, re-run the workflow; the live URL then
+appears in each run summary and under Settings -> Pages.
 
 Nothing here is Pages-specific, so any static host works too: serve the
 repository root, or just open `index.html` from disk.
